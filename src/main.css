@@ -1,0 +1,37 @@
+body{
+    font-family:'Roboto', sans-serif !important;
+}
+
+h1{
+    font-family:'Roboto', sans-serif !important;
+}
+
+h2{
+    font-size:'4em' !important;
+}
+
+span.assistance{
+    text-align:center;
+    padding-top:5px;
+    color: white !important;
+    font-weight:500;
+    text-decoration:none;
+    font-size:20px;
+}
+
+a:hover{
+    color: white;
+    weight: 500 ;
+}
+
+/* .ui.button{ */
+/*     background-color:#E91E63 !important; */
+/*     height : 2.5em; */
+/*     width: 30%; */
+/*     color:white !important; */
+/*     weight:500; */
+/*     font-size:1.5em !important; */
+/*     margin:auto !important; */
+/*     display:block !important; */
+/* } */
+
