@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "python -m SimpleHTTPServer 8004",
+    "start": "python -m SimpleHTTPServer 8009",
     "watch": "webpack -d --watch",
     "build": "webpack"
   },

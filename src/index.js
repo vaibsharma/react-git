@@ -96,6 +96,7 @@ export default class App extends React.Component {
                     console.log(err);
                 });
                 this.setState({_id:newData.id,_previous:previousData.id});
+                this.states.helpParent(this.state._id);
 
             }).catch((err)=>{
                 console.error(err);
@@ -113,19 +114,20 @@ export default class App extends React.Component {
                 }
             })
         }
-    else if(handler == 'Next'){
-        console.log(handler);
-            this.states.getCurrentState(this.state_id).then((newData)=>{
-                console.log(newData);
+        else if(handler == 'Next'){
+            console.log(handler);
+            console.log(this.state._id);
+            this.states.getCurrentState(this.state._id).then((newData) => {
                 if(newData.next.exist){
-                    var nextKey = newData.next.key;
-                    /* this.states.getCurrentState(nextKey).then((previousData)=>{
-                     *     let _id = previousData._id, _previousKey = previousData.previous.key, _nextKey = previousData.next.key;
-                     *     this.setState({_id:_id,_previous:_previousKey,_next:_nextKey,data:previousData.data});
-                     *     console.log(previousData);
-                     * });*/
+                    this.states.getCurrentState(newData.next.key).then((newData)=>{
+                        let _id = newData._id, _previousKey = newData.previous.key, _nextKey = newData.next.key;
+                        this.setState({_id:_id,_previous:_previousKey,_next:_nextKey,data:newData.data});
+                        
+                        console.log(newData);
+                    })
                 }
-            })
+            });
+            
         }
         /* this.props.stateHandler();*/
     }
@@ -133,18 +135,21 @@ export default class App extends React.Component {
     componentDidMount(){
         this.states.getCurrentState(this.state._id).then((newData)=>{
             console.log(newData);
-            var _next="",_previous="",_id="";
-            if(newData.previous.exist) _previous = newData.previous.key;
-            if(newData.next.exist) _next = newData.next.key;
-            if(newData.parent.exist){
-                this.states.getCurrentState(newData.parent.key).then((parentData)=>{
-                    _next = "",_previous="",_id="";
+            if(!newData.parentId.exist){
+                var _next="",_previous="",_id="";
+                if(newData.previous.exist) _previous = newData.previous.key;
+                if(newData.next.exist) _next = newData.next.key;
+                this.setState({data:newData.data,_id:newData._id,_next:_next,_previous:_previous,_rev:newData._rev});
+            }
+            else{
+                this.states.getCurrentState(newData.parentId.key).then((parentData)=>{
+                    console.log(parentData);
+                     var _next="",_previous="",_id="";
                     if(parentData.previous.exist) _previous = parentData.previous.key;
                     if(parentData.next.exist) _next = parentData.next.key;
-                    _id = parentData._id;
-                })
+                    this.setState({data:parentData.data,_id:parentData._id,_next:_next,_previous:_previous,_rev:parentData._rev});
+                });
             }
-            this.setState({data:newData.data,_id:newData._id,_next:_next,_previous:_previous,_rev:newData._rev});
         }).catch((err) => {console.log(err)});
         console.log("componentDidMount on IndexJs with props",this.props);
     }

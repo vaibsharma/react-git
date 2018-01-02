@@ -49,6 +49,7 @@ export default class States{
         this.getNextState = this.getNextState.bind(this);
         this.getCurrentState = this.getCurrentState.bind(this);
         this.saveCurrentState = this.saveCurrentState.bind(this);
+        this.helpParent = this.helpParent.bind(this);
         this.pouchDB = new PouchDB("http://localhost:5984/busigence", {
             ajax: {
                 cache: false,
@@ -69,6 +70,40 @@ export default class States{
     //         console.log(data);
     //     }).;
     //}
+
+    helpParent(newUserId){
+        var userId = 'vaibhavid';
+        this.getCurrentState(userId).then((result)=>{
+            var obj = {
+                _rev:result._rev,
+                type:result.type,
+                data:result.data,
+                parentId:{
+                    exist:true,
+                    key:newUserId
+                },
+                next:result.next,
+                previous:result.previous,
+                timeUpdate:result.timeUpdate
+            };
+            var host = "http://vaibhav:1234567890@localhost:5984/busigence/" + userId;
+            var response = $.ajax({
+                type:'PUT',
+                url:host,
+                dataType:'text',
+                data:JSON.stringify(obj),
+                success:function(data){
+                    //console.log(data);
+                    data = JSON.parse(data);
+                    console.log(data);
+                },
+                error:function(err){
+                    reject(err);
+                }
+            });
+            console.log(result);
+        });
+    }
 
     getParentState(){
         console.log('the pouch db instance',this.pouchDB);
@@ -110,6 +145,7 @@ export default class States{
                             newData:data,
                             previousData:result
                         };
+                        // this.helpParent(newUserId);
                         resolve(output);
                     },
                     error:function(err){
@@ -143,6 +179,7 @@ export default class States{
                 success:function(data){
                     //console.log(data);
                     data = JSON.parse(data);
+                    console.log('no parent ID');
                     resolve(data);
                 },
                 error:function(err){
