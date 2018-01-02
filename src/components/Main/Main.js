@@ -26,12 +26,23 @@ export default class Main extends React.Component {
         super(props);
         console.log(props.data);
         this.onUpdate = this.onUpdate.bind(this);
+        this.stateHandler = this.stateHandler.bind(this);
         const newData = {Writing:{},StateOptions:{}}
         this.state = {
-            writing:"",
+            count:1,
             data: props.data || newData
         }
         /* this.setState({data:newData});*/
+    }
+
+    componentWillReceiveProps(nextprops){
+        if(this.props.data != nextprops.data){
+            console.log("Main.js props are changed ",nextprops);
+            this.setState({data:nextprops.data});
+        }
+        else{
+            console.log("Main.js",this.props,nextprops);
+        }
     }
 
     onUpdate(child,data){
@@ -42,15 +53,22 @@ export default class Main extends React.Component {
         this.props.onUpdate(this.props.id,newData);
     }
 
-    componentDidMount(){
+   stateHandler(handler){
+        console.log(this.state.data,handler);
+        this.props.stateHandler(handler);
+    }
 
+    componentDidMount(){
+        console.log("componentDidMount on MainJs with props",this.props);
+        this.setState({count:this.state.count+1});
     }
 
     render(){
+        console.log("Rendering Main.js no of count is",this.state.count);
         return(
             <div>
-                <Writing id="Writing" style={styles.ListElement} data={this.state.data.Writing} onUpdate={this.onUpdate}/>
-                <StateOptions data={this.state.data.StateOptions} id="StateOptions" onUpdate={this.onUpdate}/>
+                <Writing id="Writing" style={styles.ListElement} stateHandler={this.stateHandler} data={this.state.data.Writing} onUpdate={this.onUpdate}/>
+                <StateOptions data={this.state.data.StateOptions} stateHandler={this.stateHandler} id="StateOptions" onUpdate={this.onUpdate}/>
             </div>
         )
     }

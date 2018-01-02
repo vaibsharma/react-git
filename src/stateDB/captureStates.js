@@ -7,6 +7,7 @@
 
 import PouchDB from 'pouchdb';
 import $ from 'jquery';
+import shortid from 'shortid';
 /**
  *  Data Structure for storing previous states
  */
@@ -46,8 +47,8 @@ export default class States{
         this.getParentState = this.getParentState.bind(this);
         this.getPreviousState = this.getPreviousState.bind(this);
         this.getNextState = this.getNextState.bind(this);
+        this.getCurrentState = this.getCurrentState.bind(this);
         this.saveCurrentState = this.saveCurrentState.bind(this);
-        this.getCurrentKey = this.getCurrentKey.bind(this);
         this.pouchDB = new PouchDB("http://localhost:5984/busigence", {
             ajax: {
                 cache: false,
@@ -73,6 +74,56 @@ export default class States{
         console.log('the pouch db instance',this.pouchDB);
     }
 
+    saveCurrentState(userId,data){
+        var dateTime = new Date;
+        return new Promise((resolve,reject)=>{
+            this.getCurrentState(userId).then((result)=> {
+                console.log(result);
+                let newUserId = (shortid.generate() + dateTime.getTime());
+                var obj = {
+                    type:'children',
+                    parentId: {
+                        exist:false,
+                        key:""
+                    },
+                    previous:{
+                        exist:true,
+                        key:result._id
+                    },
+                    next:{
+                        exist:false,
+                        key:""
+                    },
+                    data:data,
+                    timeUpdate:dateTime.getTime()
+                };
+                var host = "http://vaibhav:1234567890@localhost:5984/busigence/"+newUserId;
+                var response = $.ajax({
+                    type:'PUT',
+                    url:host,
+                    dataType:'text',
+                    data:JSON.stringify(obj),
+                    success:function(data){
+                        //console.log(data);
+                        data = JSON.parse(data);
+                        var output = {
+                            newData:data,
+                            previousData:result
+                        };
+                        resolve(output);
+                    },
+                    error:function(err){
+                        reject(err);
+                    }
+                });
+                //resolve(result._id);
+            }).catch((err)=>{
+                console.log(err);
+                reject(err);
+            });
+        });
+    }
+
     getPreviousState(){
         console.log('the pouch db instance',this.pouchDB);
     }
@@ -81,7 +132,7 @@ export default class States{
         console.log('the pouch db instance',this.pouchDB);
     }
 
-    saveCurrentState(userID){
+    getCurrentState(userID){
         return new Promise((resolve,reject)=>{
             let host= "http://localhost:5984/busigence/"+userID;
             console.log(host);
@@ -91,6 +142,7 @@ export default class States{
                 dataType:'text',
                 success:function(data){
                     //console.log(data);
+                    data = JSON.parse(data);
                     resolve(data);
                 },
                 error:function(err){
@@ -106,9 +158,4 @@ export default class States{
         // });
         // console.log('the pouch db instance',this.pouchDB);
     }
-
-    getCurrentKey(){
-        return "vaibhavid";
-    }
-
 }

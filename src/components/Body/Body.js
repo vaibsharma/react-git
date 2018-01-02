@@ -16,6 +16,10 @@ export default class Body extends React.Component {
         this.props.onUpdate(child);
     }
 
+    componentDidMount(){
+        console.log("body.js");
+    }
+
     render() {
         return (
                 <div style={styles.body}>

@@ -10,11 +10,33 @@ export default class StateOptions extends React.Component {
             next: false,
             data:(this.props.data) || {}
         }
+        this.clickHandler = this.clickHandler.bind(this);
+        this.stateHandler = this.stateHandler.bind(this);
     }
 
-    onUpdate(child){
+    stateHandler(handler){
+        console.log(this.state.data)
+        this.props.stateHandler(handler);
+    }
+
+    clickHandler(e){
+        const handler = e.target.id;
+        if(handler == 'Save'){
+            console.log('Save');
+            this.stateHandler(handler);
+        }
+        if(handler == 'Next'){
+            console.log('Next');
+            this.stateHandler(handler);
+        }
+        if(handler == 'Previous'){
+            console.log('Previous');
+            this.stateHandler(handler);
+        }
+    }
+    
+    onUpdate(Handler){
         console.log(`I am here indide state options and I am the father of ${child}`);
-        //this.props.onUpdate();
     }
 
     render(){
@@ -25,16 +47,17 @@ export default class StateOptions extends React.Component {
                         <Grid divided='vertically'>
                             <Grid.Row columns={2}>
                                 <Grid.Column>
-                                        <Button negative style={style.button} disabled={this.state.previous}> <Icon name='angle double left' /> Previous </Button>
+                                    <Button id="Previous" negative style={style.button} onClick={this.clickHandler} > <Icon name='angle double left' /> Previous </Button>
                                 </Grid.Column>
                                 <Grid.Column>
-                                    <Button color='blue' style={style.button} disabled={this.state.next}>Next <Icon name='angle double right' /></Button>
+                                    <Button id="Next" color='blue' onClick={this.clickHandler} style={style.button} >Next <Icon name='angle double right' /></Button>
                                 </Grid.Column>
                             </Grid.Row>
                         </Grid>
                     </Grid.Column>
                     <Grid.Column>
-                            <Button positive style={style.button}> <Icon name='checkmark' /> Save</Button>
+                        <Button id="Save" onClick={this.clickHandler}
+                                positive style={style.button}> <Icon name='checkmark' /> Save</Button>
                     </Grid.Column>
                 </Grid.Row>
             </Grid>

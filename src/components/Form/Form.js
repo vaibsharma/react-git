@@ -7,18 +7,21 @@ export default class Writing extends React.Component {
         console.log(`this is from writing component ${props.data}`);
         super(props);
         this.onUpdate = this.onUpdate.bind(this);
+        this.stateHandler = this.stateHandler.bind(this);
         this._handleKeyPress = this._handleKeyPress.bind(this);
         this.save = this.save.bind(this);
         this.onChangeInput = this.onChangeInput.bind(this);
         let listItem =["hey","whatsup","okay its working"]; 
         this.state = {
+            count:1,
             data: (props.data)? props.data : {inputText:"",listItems:listItem}
         }
 
     }
 
     componentDidMount(){
-        
+        console.log("Form.js Component did mount, props ",this.props);
+        this.setState({count:this.state.count+1});
     }
 
     _handleKeyPress(e){
@@ -35,6 +38,16 @@ export default class Writing extends React.Component {
         if(e.target.id == "saveBtn"){
             var d = {key:"Enter"};
             this._handleKeyPress(d);
+        }
+    }
+
+    componentWillReceiveProps(nextprops){
+        if(this.props.data != nextprops.data){
+            console.log("Form.js props are changed ",nextprops);
+            this.setState({data:nextprops.data});
+        }
+        else{
+            console.log("Form.js ",this.props,nextprops);
         }
     }
 
@@ -56,7 +69,13 @@ export default class Writing extends React.Component {
         this.props.onUpdate(this.props.id,newData);
     }
 
+    stateHandler(handler){
+        console.log(this.state.data,handler);
+        this.props.stateHandler(handler);
+    }
+
     render(){
+        console.log("Rendering Form.js, the no. of count is ",this.state.count);
         console.log(this.state.data.listItems);
         return(
             <div> 
@@ -67,7 +86,7 @@ export default class Writing extends React.Component {
                     </Form.Field>
                     <Button type='submit' id="saveBtn" onClick={this.save} style={style.button}>Submit</Button>
                 </Form>
-                <ListItems id="ListItem" onUpdate={this.onUpdate} data={this.state.data.listItems} />
+                <ListItems id="ListItem" stateHandler={this.stateHandler} onUpdate={this.onUpdate} data={this.state.data.listItems} />
             </div>
         )
     }
