@@ -5,32 +5,11 @@
  * @contact - vaib.sharma44@gmail.com
  */
 
-import PouchDB from 'pouchdb';
 import $ from 'jquery';
 import shortid from 'shortid';
-/**
- *  Data Structure for storing previous states
- */
-// new data = {
-//     _id: "parentID",
-//     _rev:"random id",
-//     type:"parent/child",
-//     parentId:{
-//         exist:true,
-//         key: "parentKey"
-//     },
-//     previous:{
-//         exist:true,
-//         key: "previousKey"
-//     },
-//     next:{
-//         exist:true,
-//         key: "nextKey"
-//     },
-//     data:{
-//     },
-//     time:""
-// };
+import Ajax from '../helpers/ajax';
+
+const ajax = new Ajax;
 
 export default class States{
 
@@ -40,7 +19,7 @@ export default class States{
      * @function getPreviousState
      * @function getNextState
      * @function saveCurrentState
-     * @class pouchDB
+     * @function helpParent
      */
 
     constructor(){
@@ -50,31 +29,18 @@ export default class States{
         this.getCurrentState = this.getCurrentState.bind(this);
         this.saveCurrentState = this.saveCurrentState.bind(this);
         this.helpParent = this.helpParent.bind(this);
-        this.pouchDB = new PouchDB("http://localhost:5984/busigence", {
-            ajax: {
-                cache: false,
-                timeout: 10000,
-                headers: {
-                    'Content-Type':'application/json'
-                }
-            },
-            auth: {
-                username: 'admin',
-                password: '123456789'
-            }
-        });
     }
 
-    // getParentState(userID){
-    //     this.pouchDB.get(userID).then((data) => {
-    //         console.log(data);
-    //     }).;
-    //}
+    /**
+     * Function for updating the userObject
+     * to where its currently pointing
+     * @param {string} newUserId                   // hashed userId
+     */
 
     helpParent(newUserId){
-        var userId = 'vaibhavid';
+        var userId = 'vaibhavid';  //username
         this.getCurrentState(userId).then((result)=>{
-            var obj = {
+            var data = {
                 _rev:result._rev,
                 type:result.type,
                 data:result.data,
@@ -87,27 +53,30 @@ export default class States{
                 timeUpdate:result.timeUpdate
             };
             var host = "http://vaibhav:1234567890@localhost:5984/busigence/" + userId;
-            var response = $.ajax({
-                type:'PUT',
-                url:host,
-                dataType:'text',
-                data:JSON.stringify(obj),
-                success:function(data){
-                    //console.log(data);
-                    data = JSON.parse(data);
-                    console.log(data);
-                },
-                error:function(err){
-                    reject(err);
-                }
+            ajax.makePUT(data,host).then((result)=>{
+                console.log("promises are working");
+                console.log(result);
+            }).catch((error)=>{
+                console.error(error);
             });
-            console.log(result);
         });
     }
+
+    /**
+     * Function for the topmost state
+     * i.e. get me the totally initial state in one go
+     */
 
     getParentState(){
         console.log('the pouch db instance',this.pouchDB);
     }
+
+    /**
+     * Function for saving the current changed state
+     * by the user
+     * @param {string,data} userId,data
+     * @return Promise, resolve on data, reject on error in ajax
+     */
 
     saveCurrentState(userId,data){
         var dateTime = new Date;
@@ -133,24 +102,15 @@ export default class States{
                     timeUpdate:dateTime.getTime()
                 };
                 var host = "http://vaibhav:1234567890@localhost:5984/busigence/"+newUserId;
-                var response = $.ajax({
-                    type:'PUT',
-                    url:host,
-                    dataType:'text',
-                    data:JSON.stringify(obj),
-                    success:function(data){
-                        //console.log(data);
-                        data = JSON.parse(data);
-                        var output = {
-                            newData:data,
-                            previousData:result
-                        };
-                        // this.helpParent(newUserId);
-                        resolve(output);
-                    },
-                    error:function(err){
-                        reject(err);
-                    }
+                ajax.makePUT(obj,host).then((newData)=>{
+                    var output = {
+                        newData:newData,
+                        previousData:result
+                    };
+                    console.log("The promise is working",output);
+                    resolve(output);
+                }).catch((error)=>{
+                    reject(error);
                 });
                 //resolve(result._id);
             }).catch((err)=>{
@@ -168,31 +128,22 @@ export default class States{
         console.log('the pouch db instance',this.pouchDB);
     }
 
+    /**
+     * Function for getting the current state
+     * @param {string} userId
+     * @return Promise, resolve on data, reject on error, in ajax
+     */
+
     getCurrentState(userID){
         return new Promise((resolve,reject)=>{
             let host= "http://localhost:5984/busigence/"+userID;
             console.log(host);
-            var response = $.ajax({
-                type:'GET',
-                url:host,
-                dataType:'text',
-                success:function(data){
-                    //console.log(data);
-                    data = JSON.parse(data);
-                    console.log('no parent ID');
-                    resolve(data);
-                },
-                error:function(err){
-                    reject(err);
-                }
+            ajax.makeGET(host).then((data)=>{
+                console.log('no parent ID');
+                resolve(data);
+            }).catch((error)=>{
+                reject(error);
             });
         });
-        // request(host,function(error,response,body){
-        //     console.log('error',error);
-        //     console.log('statusCode',response && response.statusCode);
-        //     console.log('body',body);
-            
-        // });
-        // console.log('the pouch db instance',this.pouchDB);
     }
 }

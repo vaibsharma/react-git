@@ -1,40 +1,63 @@
-import React from "react"
-import { Grid, Button, Icon } from "semantic-ui-react"
+/**
+ * @author - vaibhav sharma (github.com/vaibsharma)
+ * @contact - vaib.sharma44@gmail.com
+ */
+
+import React from "react";
+import { Grid, Button, Icon } from "semantic-ui-react";
+
+/**
+ * Class stateOptions
+ */
 
 export default class StateOptions extends React.Component {
+
+    /**
+     * Constructor for StateOptions component in React
+     * @function onUpdate
+     * @function stateHandler
+     * @function clickHandler
+     */
+
     constructor(props){
         super(props);
         this.onUpdate = this.onUpdate.bind(this);
+        this.clickHandler = this.clickHandler.bind(this);
+        this.stateHandler = this.stateHandler.bind(this);
         this.state = {
             previous:true,
             next: false,
             data:(this.props.data) || {}
-        }
-        this.clickHandler = this.clickHandler.bind(this);
-        this.stateHandler = this.stateHandler.bind(this);
+        };
     }
 
+    /**
+     * StateHandler function for handling
+     * Save, Next, Back
+     */
+    
     stateHandler(handler){
-        console.log(this.state.data)
+        console.log(this.state.data);
         this.props.stateHandler(handler);
     }
 
+    /**
+     * Function for Handling the clicking event
+     * @param {object} eventHandler
+     */
+
     clickHandler(e){
         const handler = e.target.id;
-        if(handler == 'Save'){
-            console.log('Save');
-            this.stateHandler(handler);
-        }
-        if(handler == 'Next'){
-            console.log('Next');
-            this.stateHandler(handler);
-        }
-        if(handler == 'Previous'){
-            console.log('Previous');
+        if(handler == 'Save' || handler == 'Previous' || handler == 'Next'){
             this.stateHandler(handler);
         }
     }
-    
+
+    /**
+     * Function for updating the component
+     * (currently useless as it doesn't do anything)
+     */
+
     onUpdate(Handler){
         console.log(`I am here indide state options and I am the father of ${child}`);
     }
@@ -61,7 +84,7 @@ export default class StateOptions extends React.Component {
                     </Grid.Column>
                 </Grid.Row>
             </Grid>
-        )
+        );
     }
 }
 
@@ -71,4 +94,4 @@ const style = {
         width:"60%",
         display:"block"
     }
-}
+};

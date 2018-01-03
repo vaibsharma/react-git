@@ -1,8 +1,23 @@
-import React from 'react'
-import { Grid, Image, Button, Checkbox, Form } from 'semantic-ui-react'
-import ListItems from "../List/List"
+/**
+ * @author - vaibhav sharma (github.com/vaibsharma)
+ * @contact - vaib.sharma44@gmail.com
+ */
+
+import React from 'react';
+import { Grid, Image, Button, Checkbox, Form } from 'semantic-ui-react';
+import ListItems from "../List/List";
+
+/**
+ * Class for form UI inheriting from React.component
+ * @function onUpdate
+ * @function stateHandler
+ * @function _handlerKeyPress
+ * @function save
+ * @function onChangeInput
+ */
 
 export default class Writing extends React.Component {
+
     constructor(props){
         console.log(`this is from writing component ${props.data}`);
         super(props);
@@ -13,16 +28,22 @@ export default class Writing extends React.Component {
         this.onChangeInput = this.onChangeInput.bind(this);
         let listItem =["hey","whatsup","okay its working"]; 
         this.state = {
-            count:1,
             data: (props.data)? props.data : {inputText:"",listItems:listItem}
-        }
-
+        };
     }
+
+    /**
+     * The inherit function from React.Component
+     * Runs after the component is rendered already
+     */
 
     componentDidMount(){
         console.log("Form.js Component did mount, props ",this.props);
-        this.setState({count:this.state.count+1});
     }
+
+    /**
+     * Function for handling Enter button
+     */
 
     _handleKeyPress(e){
         if(e.key == "Enter"){
@@ -34,12 +55,23 @@ export default class Writing extends React.Component {
         }
     }
 
+    /**
+     * Function for clicking the save button
+     * @param {object} eventHandler
+     */
+
     save(e){
         if(e.target.id == "saveBtn"){
             var d = {key:"Enter"};
             this._handleKeyPress(d);
         }
     }
+
+    /**
+    * Runs everytime when there is a change in component
+    * states and pass props on the child components
+    * @param {object} nextprops
+    */
 
     componentWillReceiveProps(nextprops){
         if(this.props.data != nextprops.data){
@@ -51,12 +83,24 @@ export default class Writing extends React.Component {
         }
     }
 
+    /**
+     * Function on changing the input Text
+     * @param {object} eventHandler
+     */
+
     onChangeInput(e){
         console.log(e.target.value);
         let newData = this.state.data;
         newData.inputText = e.target.value;
         this.setState({data:newData});
     }
+
+    /**
+     * Updating the whole JSON created with the
+     * React component and building up the TREE
+     * calling the parent onUpdate through props
+     * @param {string,object} child, data
+     */
 
     onUpdate(child,data){
         // do somework
@@ -69,13 +113,19 @@ export default class Writing extends React.Component {
         this.props.onUpdate(this.props.id,newData);
     }
 
+    /**
+    * Function for stateHandler
+    * calls the parent stateHandler through props
+    * @param {string} handler
+    */
+
     stateHandler(handler){
         console.log(this.state.data,handler);
         this.props.stateHandler(handler);
     }
 
     render(){
-        console.log("Rendering Form.js, the no. of count is ",this.state.count);
+        console.log("Rendering Form.js");
         console.log(this.state.data.listItems);
         return(
             <div> 
@@ -88,7 +138,7 @@ export default class Writing extends React.Component {
                 </Form>
                 <ListItems id="ListItem" stateHandler={this.stateHandler} onUpdate={this.onUpdate} data={this.state.data.listItems} />
             </div>
-        )
+        );
     }
 }
 
@@ -103,4 +153,4 @@ const style = {
         margin:"auto",
         display:"block"
     }
-}
+};

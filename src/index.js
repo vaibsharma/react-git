@@ -3,16 +3,27 @@ import { Grid, Image } from 'semantic-ui-react';
 import { BrowserRouter, Route, Switch, Redirect } from 'react-router-dom'
 import Body from './components/Body/Body'
 import Main from './components/Main/Main'
-import './main.css'
 import States from './stateDB/captureStates'
-import $ from 'jquery'
+import Ajax from './helpers/ajax'
+import './main.css'
+
+const ajax = new Ajax;
 
 export default class App extends React.Component {
+
+    /**
+    * Constructor for App component in React
+    * @function onUpdate
+    * @function stateHandler
+    * @class states
+     */
 
     constructor(props){
         super(props);
         console.log("Initializing the application");
-        console.log(props);
+        //console.log(props);
+        this.onUpdate = this.onUpdate.bind(this);
+        this.stateHandler = this.stateHandler.bind(this);
         this.states = new States();
         this.state = {
             _id:"vaibhavid",
@@ -21,117 +32,13 @@ export default class App extends React.Component {
             _next:"",
             data:  (props.data)? props.data : {Main:{}}
         }
-        this.onUpdate = this.onUpdate.bind(this);
-        this.stateHandler = this.stateHandler.bind(this);
     }
 
-    onUpdate(child,data){
-        // do something
-        // make some changes
-        // make a connection with couchDB
-        // make the changes in date base
-        // push the data
-        /* data = this.state.data;
-         * data.id = e;*/
-        let newData = this.state.data;
-        if(child)
-        newData[child]=data;
-        console.log(newData);
-        console.log(`I am here in Index and I am the father of ${child}`);
-        console.log("okkay its working");
-        this.setState({data:newData});
-    }
-
-    managePast(pastKey,data,currentKey){
-        return new Promise((resolve,reject)=>{
-            console.log(pastKey,data,currentKey);
-            var host = "http://vaibhav:1234567890@localhost:5984/busigence/"+pastKey;
-            var obj = {
-                _rev:data._rev,
-                type:data.type,
-                parentId: data.parentId,
-                previous: data.previous,
-                next:{
-                    exist:true,
-                    key:currentKey
-                },
-                data:data.data,
-                timeUpdate:data.timeUpdate
-            };
-
-            var response = $.ajax({
-                type:'PUT',
-                url:host,
-                dataType:'text',
-                data:JSON.stringify(obj),
-                success:function(data){
-                    //console.log(data);
-                    data = JSON.parse(data);
-                    resolve(data);
-                },
-                error:function(err){
-                        reject(err);
-                }
-            });
-            
-        });
-    }
+    /**
+     * The inherit function from React.Component
+     * Runs after the component is rendered already
+     */
     
-    stateHandler(handler){
-        console.log(this.state.data)
-        console.log(handler);
-        if(handler == 'Save'){
-            var previousKey = this.state._id;
-            this.states.saveCurrentState(previousKey,this.state.data).then((result)=>{
-                console.log(result);
-                var previousData = result.previousData, newData = result.newData;
-                this.managePast(previousData._id,previousData,newData.id).then((result)=>{
-                    console.log(result);
-                    /* this.states.getCurrentState(result.id).then((result)=>{
-                     *     console.log(result);
-                     * }).catch((err)=>{
-                     *     console.log(err);
-                     * }*/
-                }).catch((err)=>{
-                    console.log(err);
-                });
-                this.setState({_id:newData.id,_previous:previousData.id});
-                this.states.helpParent(this.state._id);
-
-            }).catch((err)=>{
-                console.error(err);
-            });
-        }
-        else if(handler == 'Previous'){
-            this.states.getCurrentState(this.state._id).then((newData) => {
-                if(newData.previous.exist){
-                    var previousKey = newData.previous.key;
-                    this.states.getCurrentState(previousKey).then((previousData)=>{
-                        let _id = previousData._id, _previousKey = previousData.previous.key, _nextKey = previousData.next.key;
-                        this.setState({_id:_id,_previous:_previousKey,_next:_nextKey,data:previousData.data});
-                        console.log(previousData);
-                    })
-                }
-            })
-        }
-        else if(handler == 'Next'){
-            console.log(handler);
-            console.log(this.state._id);
-            this.states.getCurrentState(this.state._id).then((newData) => {
-                if(newData.next.exist){
-                    this.states.getCurrentState(newData.next.key).then((newData)=>{
-                        let _id = newData._id, _previousKey = newData.previous.key, _nextKey = newData.next.key;
-                        this.setState({_id:_id,_previous:_previousKey,_next:_nextKey,data:newData.data});
-                        
-                        console.log(newData);
-                    })
-                }
-            });
-            
-        }
-        /* this.props.stateHandler();*/
-    }
-
     componentDidMount(){
         this.states.getCurrentState(this.state._id).then((newData)=>{
             console.log(newData);
@@ -154,13 +61,112 @@ export default class App extends React.Component {
         console.log("componentDidMount on IndexJs with props",this.props);
     }
 
+    /**
+     * Runs everytime when there is a change in component
+     * states and pass props on the child components
+     * @param {object} nextprops
+     */
+
     componentWillReceiveProps(nextprops){
         if(this.props.data != nextprops.data){
             console.log("index.js props are changed ",nextprops);
-            
         }
         else{
             console.log("index.js ",this.props,nextprops);
+        }
+    }
+    
+    /**
+     * Updating the whole JSON created with the
+     * React component and building up the TREE
+     */
+
+    onUpdate(child,data){
+        let newData = this.state.data;
+        if(child)
+        newData[child]=data;
+        console.log(newData);
+        console.log(`I am here in Index and I am the father of ${child}`);
+        console.log("okkay its working");
+        this.setState({data:newData});
+    }
+
+    /**
+     * Function for assigning the next pointer to
+     * the current state in CouchDB
+     * @param {string,object,string} pastKey, data, currentKey
+     */
+
+    managePast(pastKey,data,currentKey){
+        return new Promise((resolve,reject)=>{
+            console.log(pastKey,data,currentKey);
+            var host = "http://vaibhav:1234567890@localhost:5984/busigence/"+pastKey;
+            var obj = {
+                _rev:data._rev,
+                type:data.type,
+                parentId: data.parentId,
+                previous: data.previous,
+                next:{
+                    exist:true,
+                    key:currentKey
+                },
+                data:data.data,
+                timeUpdate:data.timeUpdate
+            };
+
+            ajax.makePUT(obj,host).then((result)=>{
+                resolve(result);
+            }).catch((error)=>{
+                reject(error);
+            });
+        });
+    }
+
+    /**
+     * Function for handling the options for
+     * going back, next and saving the current stateHandler
+     * @param {string} handler
+     */
+
+    stateHandler(handler){
+        console.log(this.state.data)
+        console.log(handler);
+        if(handler == 'Save'){
+            var previousKey = this.state._id;
+            this.states.saveCurrentState(previousKey,this.state.data).then((result)=>{
+                console.log(result);
+                var previousData = result.previousData, newData = result.newData;
+                this.managePast(previousData._id,previousData,newData.id).then((result)=>{
+                    console.log(result);
+                }).catch((err)=>{
+                    console.log(err);
+                });
+                this.setState({_id:newData.id,_previous:previousData.id});
+                this.states.helpParent(this.state._id);
+
+            }).catch((err)=>{
+                console.error(err);
+            });
+        }
+        else if(handler == 'Previous' || handler == 'Next'){
+            this.states.getCurrentState(this.state._id).then((newData) => {
+                var flag = false,wantedKey;
+                if(handler == 'Previous' && newData.previous.exist){
+                    flag = true;
+                    wantedKey = newData.previous.key;
+                }
+                else if(handler == 'Next' && newData.next.exist){
+                    flag = true;
+                    wantedKey = newData.next.key;
+                }
+                if(flag){
+                    this.states.getCurrentState(wantedKey).then((resultData)=>{
+                                 let _id = resultData._id, _previousKey = resultData.previous.key, _nextKey = resultData.next.key;
+                                 this.setState({_id:_id,_previous:_previousKey,_next:_nextKey,data:resultData.data});
+                                 console.log(resultData);
+                             });
+                }
+            });
         }
     }
 

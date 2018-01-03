@@ -1,8 +1,16 @@
+/**
+ * Thanks @facebook and component design of the JS UI
+ * @author - vaibhav sharma (github.com/vaibsharma)
+ * @contact - vaib.sharma44@gmail.com
+ */
+
+
 import React from 'react';
 import {Grid, Card, Icon} from 'semantic-ui-react'
 import {Link} from 'react-router-dom'
 
 export default class Body extends React.Component {
+
     constructor(props) {
         super(props);
         console.log(props);
