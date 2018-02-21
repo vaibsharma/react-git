@@ -48,7 +48,7 @@ export default class StateOptions extends React.Component {
 
     clickHandler(e){
         const handler = e.target.id;
-        if(handler == 'Save' || handler == 'Previous' || handler == 'Next'){
+        if(handler == 'save' || handler == 'previous' || handler == 'next'){
             this.stateHandler(handler);
         }
     }
@@ -70,16 +70,16 @@ export default class StateOptions extends React.Component {
                         <Grid divided='vertically'>
                             <Grid.Row columns={2}>
                                 <Grid.Column>
-                                    <Button id="Previous" negative style={style.button} onClick={this.clickHandler} > <Icon name='angle double left' /> Previous </Button>
+                                    <Button id="previous" negative style={style.button} onClick={this.clickHandler} > <Icon name='angle double left' /> Previous </Button>
                                 </Grid.Column>
                                 <Grid.Column>
-                                    <Button id="Next" color='blue' onClick={this.clickHandler} style={style.button} >Next <Icon name='angle double right' /></Button>
+                                    <Button id="next" color='blue' onClick={this.clickHandler} style={style.button} >Next <Icon name='angle double right' /></Button>
                                 </Grid.Column>
                             </Grid.Row>
                         </Grid>
                     </Grid.Column>
                     <Grid.Column>
-                        <Button id="Save" onClick={this.clickHandler}
+                        <Button id="save" onClick={this.clickHandler}
                                 positive style={style.button}> <Icon name='checkmark' /> Save</Button>
                     </Grid.Column>
                 </Grid.Row>

@@ -48,10 +48,12 @@ export default class Writing extends React.Component {
     _handleKeyPress(e){
         if(e.key == "Enter"){
             let list = this.state.data.listItems, inputText = this.state.data.inputText;
-            list.unshift(inputText);
-            let newData = {listItems:list,inputText:""};
-            this.setState({data:newData});
-            this.onUpdate("inputText",inputText);
+            if(inputText.length>0){
+                list.unshift(inputText);
+                let newData = {listItems:list,inputText:""};
+                this.setState({data:newData});
+                this.onUpdate("listItems",list);
+            }
         }
     }
 
@@ -76,7 +78,11 @@ export default class Writing extends React.Component {
     componentWillReceiveProps(nextprops){
         if(this.props.data != nextprops.data){
             console.log("Form.js props are changed ",nextprops);
-            this.setState({data:nextprops.data});
+            if(nextprops.data){
+                nextprops.data.inputText = "";
+                this.setState({data:nextprops.data});
+            }
+            
         }
         else{
             console.log("Form.js ",this.props,nextprops);

@@ -70,23 +70,23 @@ export default class ListItems extends React.Component {
      */
 
     onUpdate(child,data){
-        //do somework
-        // change the date
-        //let data = {
-        //this.props.onUpdate();
+        
         console.log(`I am here inside list and I am the father of ${child}`);
         this.setState({count:this.state.count+1});
-        //this.props.onUpdate(this.props.id);
+        //this.props.onUpdate();
     }
 
     render(){
         console.log("Rendering list.js and  the no. of count is ",this.state.count);
         let items = this.state.data;
-
         return(
             <Message>
                 <Message.Header>Entered Data</Message.Header>
-                <Message.List id="Message" items={items} key={shortid.generate()} />
+                {
+                    items.map((item,index)=>{
+                        return <Message.List id="Message" items={[item]} onClick={this.changeBackground} key={index} />;
+                    })
+                }
             </Message>
         );
     }
