@@ -2,10 +2,9 @@
  * Class for playing with the UI States
  * Thanks @facebook and component design of the JS UI
  * @author - vaibhav sharma (github.com/vaibsharma)
- * @contact - vaib.sharma44@gmail.com
+ * @mail - vaib.sharma44@gmail.com
  */
 
-import $ from 'jquery';
 import shortid from 'shortid';
 import Ajax from '../helpers/ajax';
 
@@ -23,127 +22,344 @@ export default class States{
      */
 
     constructor(){
-        this.getParentState = this.getParentState.bind(this);
-        this.getPreviousState = this.getPreviousState.bind(this);
-        this.getNextState = this.getNextState.bind(this);
-        this.getCurrentState = this.getCurrentState.bind(this);
+        this.getDocuments = this.getDocuments.bind(this);
+        this.stateHandler = this.stateHandler.bind(this);
         this.saveCurrentState = this.saveCurrentState.bind(this);
-        this.helpParent = this.helpParent.bind(this);
+        this.getNewVersion = this.getNewVersion.bind(this);
+        this.host = "http://vaibhav:1234567890@localhost:5984/git-react/";
     }
 
     /**
-     * Function for updating the userObject
-     * to where its currently pointing
-     * @param {string} newUserId                   // hashed userId
+     * Initializer function for the states
+     * @param _username {string}_
+     * @param stateData {object}
+     * @return Promise
      */
 
-    helpParent(newUserId){
-        var userId = 'vaibhavid';  //username
-        this.getCurrentState(userId).then((result)=>{
-            var data = {
-                _rev:result._rev,
-                type:result.type,
-                data:result.data,
-                parentId:{
-                    exist:true,
-                    key:newUserId
-                },
-                next:result.next,
-                previous:result.previous,
-                timeUpdate:result.timeUpdate
-            };
-            var host = "http://vaibhav:1234567890@localhost:5984/busigence/" + userId;
-            ajax.makePUT(data,host).then((result)=>{
-                console.log("promises are working");
-                console.log(result);
-            }).catch((error)=>{
-                console.error(error);
-            });
-        });
-    }
-
-    /**
-     * Function for the topmost state
-     * i.e. get me the totally initial state in one go
-     */
-
-    getParentState(){
-        console.log('the pouch db instance',this.pouchDB);
-    }
-
-    /**
-     * Function for saving the current changed state
-     * by the user
-     * @param {string,data} userId,data
-     * @return Promise, resolve on data, reject on error in ajax
-     */
-
-    saveCurrentState(userId,data){
-        var dateTime = new Date;
+    __init__(_username_,stateData){
         return new Promise((resolve,reject)=>{
-            this.getCurrentState(userId).then((result)=> {
-                console.log(result);
-                let newUserId = (shortid.generate() + dateTime.getTime());
+            this.getDocuments(_username_).then((documents)=>{
                 var obj = {
-                    type:'children',
-                    parentId: {
-                        exist:false,
-                        key:""
-                    },
-                    previous:{
-                        exist:true,
-                        key:result._id
-                    },
-                    next:{
-                        exist:false,
-                        key:""
-                    },
-                    data:data,
-                    timeUpdate:dateTime.getTime()
-                };
-                var host = "http://vaibhav:1234567890@localhost:5984/busigence/"+newUserId;
-                ajax.makePUT(obj,host).then((newData)=>{
-                    var output = {
-                        newData:newData,
-                        previousData:result
-                    };
-                    console.log("The promise is working",output);
-                    resolve(output);
-                }).catch((error)=>{
-                    reject(error);
-                });
-                //resolve(result._id);
+                    versions:[],
+                    data:{
+                    }
+                }, versions = [], id = "";
+
+                // If there is no document for the user i.e. user coming for the first time
+
+                if(documents.length == 0){
+                    // Adding new user to database
+                    this.getNewVersion(_username_,stateData).then((result)=>{
+                        console.log(result);
+                        versions = [result.id];
+                        obj.versions = versions;
+                        id = this.host + result.id;
+                        ajax.makeGET(id).then((result)=>{
+                            obj.data = result;
+                            resolve(obj);
+                        }).catch((err)=>{
+                            reject(err);
+                        });
+                    }).catch((err)=>{
+                        reject(err);
+                    });
+                }
+
+                // They are versions. Currently we are not using them, nevertheless functionality is just one 10 lines function less.
+
+                else if(documents.length>0){
+                    for(var x in documents){
+                        versions.push(documents[x]._id);
+                    }
+                    console.log(versions);
+                    obj.versions = versions;
+                    var host = this.host + versions[0];
+                    ajax.makeGET(host).then((result)=>{
+                        host = this.host + result.head;
+                        ajax.makeGET(host).then((headResult)=>{
+                            obj.data = headResult;
+                            resolve(obj);
+                        }).catch((err)=>{
+                            obj.data = result;
+                            resolve(obj);
+                        });
+                    }).catch((err)=>{
+                        reject(err);
+                    });
+                }
             }).catch((err)=>{
-                console.log(err);
                 reject(err);
             });
         });
     }
 
-    getPreviousState(){
-        console.log('the pouch db instance',this.pouchDB);
-    }
+    /**
+     * Finding the Parent(branch) documents for a user
+     * @param _username_ {string}
+     * @return Promise
+     */
 
-    getNextState(){
-        console.log('the pouch db instance',this.pouchDB);
+    getDocuments(_username_){
+        let host = this.host + "_find", query = this.makeDocumentQuery(_username_);
+        return new Promise((resolve,reject)=>{
+            console.log(query);
+            ajax.makePOST(query,host).then((result)=>{
+                resolve(result.docs);
+            }).catch((err)=>{
+                reject(err);
+            });
+        });
     }
 
     /**
-     * Function for getting the current state
-     * @param {string} userId
-     * @return Promise, resolve on data, reject on error, in ajax
+     * Function to handle operation on states i.e. Previous, Next and Save
+     * @param handler {string}
+     * @param stateData
+     * @return Promise
      */
 
-    getCurrentState(userID){
+    stateHandler(handler,stateData){
+        console.log(handler,stateData);
         return new Promise((resolve,reject)=>{
-            let host= "http://localhost:5984/busigence/"+userID;
-            console.log(host);
-            ajax.makeGET(host).then((data)=>{
-                console.log('no parent ID');
-                resolve(data);
-            }).catch((error)=>{
-                reject(error);
+
+            // Handling save operation.
+
+            if(handler == 'save'){
+                console.log("asking for save");
+                this.saveCurrentState(stateData).then((result)=>{
+                    this.handleParent(stateData.parent, result.id).then((firstpass)=>{
+                        console.log("parent is handled");
+                        this.handlePrevious(stateData.stateid, result.id).then((secondpass)=>{
+                            console.log("previous element is handled");
+                            if(stateData.next.length>0) this.deleteNextStates(stateData.next).then((result)=>{
+                                console.log(result);
+                            }).catch((err)=>{
+                                reject(err);
+                            });
+                        }).catch((err)=>{
+                            console.error(err,"previous element is not handled");
+                        });
+                    }).catch((err)=>{
+                        console.error("parent is not handled");
+                    });
+
+                    var obj = {
+                        versions:[],
+                        data:{}
+                    };
+
+                    var host = this.host + result.id;
+                    ajax.makeGET(host).then((fullDocument)=>{
+                        obj.versions = stateData.versions;
+                        obj.data = fullDocument;
+                        resolve(obj);
+                    }).catch((err)=>{
+                        reject(err);
+                    });
+                }).catch((err)=>{
+                    resolve(err);
+                });
+            }
+
+            // Handling previous and next operation.
+
+            else if(handler == 'previous' || handler == 'next'){
+                console.log(`asking for ${handler}`);
+                let pointer = stateData[handler];
+                if(pointer.length>0){
+                    let host = this.host + pointer;
+                    ajax.makeGET(host).then((result)=>{
+                        let obj = {
+                            versions:[],
+                            data:{}
+                        };
+                        obj.versions = stateData.versions;
+                        obj.data = result;
+                        resolve(obj);
+                    }).catch((err)=>{
+                        reject(err);
+                    });
+                }
+                else{
+                    let err = `You requested for ${handler} but we didn't find any such ${handler} state from the current state`;
+                    reject(err);
+                }
+            }
+        });
+    }
+
+    /**
+     * Function to delete all documents after the current state
+     * @param nextId {string}
+     * @return Promise
+     */
+
+    deleteNextStates(nextId){
+        return new Promise((resolve,reject)=>{
+            let host = this.host + nextId;
+            ajax.makeGET(host).then((result)=>{
+                if(result.next.exist){
+                    this.deleteNextStates(result.next.pointer).then((success)=>{
+                        console.log(success);
+
+                    }).catch((err)=>{
+                        console.error(err);
+                    });
+                };
+                ajax.makeDELETE(nextId).then((result)=>{
+                    resolve(result);
+                }).catch((error)=>{
+                    reject(error);
+                });
             });
         });
+    }
+
+    /**
+     * Function to handle the Parent document to point to current head document
+     * @param parentId {string}
+     * @param headId {string}
+     * @return Promise
+     */
+
+    handleParent(parentId,headId){
+        return new Promise((resolve,reject)=>{
+            let host = this.host + parentId;
+            ajax.makeGET(host).then((parentDocument)=>{
+                var obj = parentDocument;
+                obj.head = headId;
+                ajax.makePUT(obj,host).then((result)=>{
+                    resolve(result);
+                }).catch((err)=>{
+                    reject(err);
+                });
+            }).catch((err)=>{
+                var err = "Cannot update the parent Document of this branch";
+                reject(err);
+            });
+        });
+    }
+
+    /**
+     * Function to handle the parent document to point to current head document
+     * @param previousId {string}
+     * @param headId {string}
+     * @return Promise
+     */
+
+    handlePrevious(previousId, headId){
+        return new Promise((resolve,reject)=>{
+            let host = this.host + previousId;
+            ajax.makeGET(host).then((parentDocument)=>{
+                var obj = parentDocument;
+                obj.next.exist = true;
+                obj.next.pointer = headId;
+                ajax.makePUT(obj,host).then((result)=>{
+                    resolve(result);
+                }).catch((err)=>{
+                    reject(err);
+                });
+            }).catch((err)=>{
+                var err = "Cannot update the parent Document of this branch";
+                reject(err);
+            });
+        });
+    }
+
+    /**
+     * Function to save current document
+     * @param stateData {object}
+     * @return Promise
+     */
+
+    saveCurrentState(stateData){
+        return new Promise((resolve,reject)=>{
+            let date = new Date, id = date.getTime()+shortid.generate();
+            var obj = {
+                data:stateData.data,
+                username:stateData.username,
+                type:"children",
+                next:{
+                    exist:false,
+                    pointer:""
+                },
+                previous:{
+                    exist:true,
+                    pointer:stateData.stateid
+                },
+                parentId:stateData.parent,
+                head:id,
+                timeupdate:date.toString()
+            };
+            let host = this.host + id;
+            ajax.makePUT(obj,host).then((result)=>{
+                resolve(result);
+            }).catch((err)=>{
+                reject(err);
+            });
+        });
+    }
+
+    /**
+     * Function to get new version
+     * @param username {string}
+     * @param stateData {object}
+     * @return Promise
+     */
+
+    getNewVersion(username,stateData){
+        let date = new Date, time = date.getTime(), id = time + shortid.generate();
+        let stateDocument = {
+            type:"parent",
+            parentId:id,
+            username:username,
+            head:id,
+            next:{
+                exist:false,
+                pointer:""
+            },
+            previous:{
+                exist:false,
+                pointer:""
+            },
+            data:stateData,
+            timeupdate:date.toString()
+        };
+
+        let host = this.host + id;
+        return new Promise((resolve,reject)=>{
+            ajax.makePUT(stateDocument,host).then((result)=>{
+                resolve(result);
+            }).catch((err)=>{
+                reject(err);
+            });
+        });
+    }
+
+    /**
+     * Function to make a couchDB query
+     * @param username {string}
+     * @return Promise
+     */
+
+    makeDocumentQuery(username){
+        let query = {
+            "selector": {
+                "$and": [
+                    {
+                        "username": username
+                    },
+                    {
+                        "type": "parent"
+                    }
+                ]
+            },
+            "sort": [
+                {
+                    "timeupdate": "desc"
+                }
+            ]
+        };
+        return query;
     }
 }
