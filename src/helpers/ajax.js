@@ -41,6 +41,7 @@ export default class Ajax{
                     url:host,
                     dataType:'text',
                     data:JSON.stringify(data),
+                    contentType:"application/json",
                     success:function(result){
                         //console.log(data);
                         result = JSON.parse(result);
@@ -106,6 +107,14 @@ export default class Ajax{
             }).catch((error)=>{
                 reject(error);
             });
+        });
+     };
+
+    makeDELETE = (host)=>{
+        var requestType = 'DELET', data = {};
+        return new Promise((resolve,reject)=>{
+            resolve("okkay I am done");
+            reject("fuck off");
         });
     };
 }
